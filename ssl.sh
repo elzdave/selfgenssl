@@ -71,7 +71,7 @@ ISSUER_OU=$(echo $DEC_SSL | awk -F"," '{print $5}' | awk -F"= " '{print $2}')
 ISSUER_CN=$(echo $DEC_SSL | awk -F"," '{print $6}' | awk -F"= " '{print $2}')
 ISSUER_E=$(echo $DEC_SSL | awk -F"," '{print $7}' | awk -F"= " '{print $2}')
 
-# Load our information
+# Load subject information
 SUBJ_C=$(sed '1q;d' $SUBJ_INFO)
 SUBJ_ST=$(sed '2q;d' $SUBJ_INFO)
 SUBJ_L=$(sed '3q;d' $SUBJ_INFO)
@@ -92,7 +92,7 @@ echo "Email             : $ISSUER_E"
 echo -e "${LGRAY}*** END OF ISSUER INFORMATION ***"
 echo ""
 
-# print issuer information
+# print subject information
 echo -e "${YELLOW}*** BEGIN OF SUBJECT INFORMATION ***"
 echo "Country Name      : $SUBJ_C"
 echo "State             : $SUBJ_ST"
