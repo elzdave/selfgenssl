@@ -52,8 +52,7 @@ KEY_LENGTH=3072         # RSA key length
 EC_ALGO=secp384r1       # ECDSA algorithm
 SHA_ALGO=sha384         # Hashing algorithm
 TTL=1825                # this certificate will valid for ~5 years
-ROOT_INFO=root.info     # root CA signer information
-SIGNED_INFO=ssl.info    # our signed certificate information
+SUBJ_INFO=ssl.info      # our signed certificate information
 
 # splash lines
 clear
@@ -63,29 +62,30 @@ echo -e "${LPURPLE}######################################"
 echo ""
 
 # Load issuer information
-ISSUER_C=$(sed '1q;d' $ROOT_CA_PATH/$ROOT_INFO)
-ISSUER_S=$(sed '2q;d' $ROOT_CA_PATH/$ROOT_INFO)
-ISSUER_LN=$(sed '3q;d' $ROOT_CA_PATH/$ROOT_INFO)
-ISSUER_ON=$(sed '4q;d' $ROOT_CA_PATH/$ROOT_INFO)
-ISSUER_OU=$(sed '5q;d' $ROOT_CA_PATH/$ROOT_INFO)
-ISSUER_CN=$(sed '6q;d' $ROOT_CA_PATH/$ROOT_INFO)
-ISSUER_E=$(sed '7q;d' $ROOT_CA_PATH/$ROOT_INFO)
+DEC_SSL=$(openssl x509 -in $ROOT_CA_PATH/$CA.crt -text -noout | grep 'Issuer:')
+ISSUER_C=$(echo $DEC_SSL | awk -F"," '{print $1}' | awk -F"= " '{print $2}')
+ISSUER_ST=$(echo $DEC_SSL | awk -F"," '{print $2}' | awk -F"= " '{print $2}')
+ISSUER_L=$(echo $DEC_SSL | awk -F"," '{print $3}' | awk -F"= " '{print $2}')
+ISSUER_O=$(echo $DEC_SSL | awk -F"," '{print $4}' | awk -F"= " '{print $2}')
+ISSUER_OU=$(echo $DEC_SSL | awk -F"," '{print $5}' | awk -F"= " '{print $2}')
+ISSUER_CN=$(echo $DEC_SSL | awk -F"," '{print $6}' | awk -F"= " '{print $2}')
+ISSUER_E=$(echo $DEC_SSL | awk -F"," '{print $7}' | awk -F"= " '{print $2}')
 
 # Load our information
-SIGNED_C=$(sed '1q;d' $SIGNED_INFO)
-SIGNED_S=$(sed '2q;d' $SIGNED_INFO)
-SIGNED_LN=$(sed '3q;d' $SIGNED_INFO)
-SIGNED_ON=$(sed '4q;d' $SIGNED_INFO)
-SIGNED_OU=$(sed '5q;d' $SIGNED_INFO)
-SIGNED_CN=$(sed '6q;d' $SIGNED_INFO)
-SIGNED_E=$(sed '7q;d' $SIGNED_INFO)
+SUBJ_C=$(sed '1q;d' $SUBJ_INFO)
+SUBJ_ST=$(sed '2q;d' $SUBJ_INFO)
+SUBJ_L=$(sed '3q;d' $SUBJ_INFO)
+SUBJ_O=$(sed '4q;d' $SUBJ_INFO)
+SUBJ_OU=$(sed '5q;d' $SUBJ_INFO)
+SUBJ_CN=$(sed '6q;d' $SUBJ_INFO)
+SUBJ_E=$(sed '7q;d' $SUBJ_INFO)
 
 # print issuer information
 echo -e "${LGRAY}*** BEGIN OF ISSUER INFORMATION ***"
 echo "Country Name      : $ISSUER_C"
-echo "State             : $ISSUER_S"
-echo "Locality          : $ISSUER_LN"
-echo "Organization Name : $ISSUER_ON"
+echo "State             : $ISSUER_ST"
+echo "Locality          : $ISSUER_L"
+echo "Organization Name : $ISSUER_O"
 echo "Organization Unit : $ISSUER_OU"
 echo "Common Name       : $ISSUER_CN"
 echo "Email             : $ISSUER_E"
@@ -93,15 +93,15 @@ echo -e "${LGRAY}*** END OF ISSUER INFORMATION ***"
 echo ""
 
 # print issuer information
-echo -e "${YELLOW}*** BEGIN OF SIGNED INFORMATION ***"
-echo "Country Name      : $SIGNED_C"
-echo "State             : $SIGNED_S"
-echo "Locality          : $SIGNED_LN"
-echo "Organization Name : $SIGNED_ON"
-echo "Organization Unit : $SIGNED_OU"
-echo "Common Name       : $SIGNED_CN"
-echo "Email             : $SIGNED_E"
-echo -e "${YELLOW}*** END OF SIGNED INFORMATION ***"
+echo -e "${YELLOW}*** BEGIN OF SUBJECT INFORMATION ***"
+echo "Country Name      : $SUBJ_C"
+echo "State             : $SUBJ_ST"
+echo "Locality          : $SUBJ_L"
+echo "Organization Name : $SUBJ_O"
+echo "Organization Unit : $SUBJ_OU"
+echo "Common Name       : $SUBJ_CN"
+echo "Email             : $SUBJ_E"
+echo -e "${YELLOW}*** END OF SUBJECT INFORMATION ***"
 echo ""
 
 # Algorithm information
@@ -126,7 +126,7 @@ elif [ "$1" == "-ecdsa" ];then
     echo -e "${GREEN}"
     openssl ecparam -name $EC_ALGO -genkey -out $DOMAIN.key
 fi
-openssl req -new -key $DOMAIN.key -$SHA_ALGO -out $DOMAIN.csr < $SIGNED_INFO
+openssl req -new -key $DOMAIN.key -$SHA_ALGO -out $DOMAIN.csr < $SUBJ_INFO
 openssl x509 -req -in $DOMAIN.csr -passin file:$ROOT_CA_PATH/$PWD_FILE -signkey $DOMAIN.key -$SHA_ALGO -days $TTL -CA $ROOT_CA_PATH/$CA.crt -CAkey $ROOT_CA_PATH/$CA.key -CAcreateserial -out $DOMAIN.crt
 echo -e "\n${WHITE}Successfully generated ${CYAN}$SEL_ALGO ${WHITE}private key and certificate"
 echo -e "${LCYAN}Certificate generation finished.${NC}"
