@@ -1,8 +1,9 @@
-# SSL/TLS Root CA Private Key and Certificate generator
+# SSL/TLS Root CA Private Key and Certificate generator using OpenSSL
 
 ## General Information
 * Author    : David Eleazar [[elzdave@student.untan.ac.id](mailto:elzdave@student.untan.ac.id)]
 * Date      : 09 June, 2019
+* Operating System : Linux-based OS with OpenSSL installed
 
 ## Usage
 1. Edit `root.info` according to your preference

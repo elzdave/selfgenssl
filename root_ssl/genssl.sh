@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generate trusted self-signed SSL root CA certificate
+# Generate trusted self-signed SSL root CA certificate using OpenSSL
 # based on the information from root.info
 #
 # (c) 2019, David Eleazar
@@ -85,8 +85,10 @@ echo ""
 # Algorithm information
 if [ "$1" == "-rsa" ] || [ "$1" == "" ];then
     SEL_ALGO="RSA $KEY_LENGTH"
+    PRIV_KEY_GEN="openssl genrsa -out $CA.key -$AES_ALGO -passout file:$PWD_FILE $KEY_LENGTH"
 elif [ "$1" == "-ecdsa" ];then
     SEL_ALGO="ECDSA $EC_ALGO"
+    PRIV_KEY_GEN="openssl ecparam -name $EC_ALGO -genkey | openssl ec -$AES_ALGO -passout file:$PWD_FILE -out $CA.key"
 fi
 echo -e "${LCYAN}*** BEGIN OF ALGORITHM INFORMATION ***"
 echo "Authentication    : $SEL_ALGO"
@@ -101,16 +103,10 @@ chmod 600 $PWD_FILE
 echo -e "${WHITE}Private key password : ${LGREEN}$PASSWD${NC}"
 echo -e "${WHITE}The password is stored in ${LRED}.passphrase${WHITE} file in this folder, please keep it in a safe place"
 
-# argument check
-if [ "$1" == "-rsa" ] || [ "$1" == "" ];then
-    echo -e "${WHITE}Generating ${CYAN}RSA $KEY_LENGTH ${WHITE}private key and certificate . . ."
-    echo -e "${GREEN}"
-    openssl genrsa -out $CA.key -$AES_ALGO -passout file:$PWD_FILE $KEY_LENGTH
-elif [ "$1" == "-ecdsa" ];then
-    echo -e "${WHITE}Generating ${CYAN}ECDSA $EC_ALGO ${WHITE}private key and certificate . . ."
-    echo -e "${GREEN}"
-    openssl ecparam -name $EC_ALGO -genkey | openssl ec -$AES_ALGO -passout file:$PWD_FILE -out $CA.key
-fi
+# begin works
+echo -e "${WHITE}Generating ${CYAN}$SEL_ALGO ${WHITE}private key and certificate . . ."
+echo -e "${GREEN}"
+eval $PRIV_KEY_GEN
 openssl req -x509 -passin file:$PWD_FILE -new -nodes -key $CA.key -$SHA_ALGO -days $TTL -out $CA.crt < $ROOT_INFO
 echo -e "\n\n${WHITE}Successfully generated ${CYAN}$SEL_ALGO ${WHITE}private key and certificate"
 echo -e "${LCYAN}Certificate generation finished.${NC}"
