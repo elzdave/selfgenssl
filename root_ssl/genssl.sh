@@ -85,10 +85,14 @@ echo ""
 # Algorithm information
 if [ "$1" == "-rsa" ] || [ "$1" == "" ];then
     SEL_ALGO="RSA $KEY_LENGTH"
-    PRIV_KEY_GEN="openssl genrsa -out $CA.key -$AES_ALGO -passout file:$PWD_FILE $KEY_LENGTH"
+    generatePKey(){
+        openssl genrsa -out $CA.key -$AES_ALGO -passout file:$PWD_FILE $KEY_LENGTH
+    }
 elif [ "$1" == "-ecdsa" ];then
     SEL_ALGO="ECDSA $EC_ALGO"
-    PRIV_KEY_GEN="openssl ecparam -name $EC_ALGO -genkey | openssl ec -$AES_ALGO -passout file:$PWD_FILE -out $CA.key"
+    generatePKey(){
+        openssl ecparam -name $EC_ALGO -genkey | openssl ec -$AES_ALGO -passout file:$PWD_FILE -out $CA.key
+    }
 fi
 echo -e "${LCYAN}*** BEGIN OF ALGORITHM INFORMATION ***"
 echo "Authentication    : $SEL_ALGO"
@@ -106,7 +110,7 @@ echo -e "${WHITE}The password is stored in ${LRED}.passphrase${WHITE} file in th
 # begin works
 echo -e "${WHITE}Generating ${CYAN}$SEL_ALGO ${WHITE}private key and certificate . . ."
 echo -e "${GREEN}"
-eval $PRIV_KEY_GEN
+generatePKey
 openssl req -x509 -passin file:$PWD_FILE -new -nodes -key $CA.key -$SHA_ALGO -days $TTL -out $CA.crt < $ROOT_INFO
 echo -e "\n\n${WHITE}Successfully generated ${CYAN}$SEL_ALGO ${WHITE}private key and certificate"
 echo -e "${LCYAN}Certificate generation finished.${NC}"

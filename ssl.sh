@@ -107,10 +107,14 @@ echo ""
 # Algorithm information
 if [ "$1" == "-rsa" ] || [ "$1" == "" ];then
     SEL_ALGO="RSA $KEY_LENGTH"
-    PRIV_KEY_GEN="openssl genrsa -out $DOMAIN.key $KEY_LENGTH"
+    generatePKey(){
+        openssl genrsa -out $DOMAIN.key $KEY_LENGTH
+    }
 elif [ "$1" == "-ecdsa" ];then
     SEL_ALGO="ECDSA $EC_ALGO"
-    PRIV_KEY_GEN="openssl ecparam -name $EC_ALGO -genkey -out $DOMAIN.key"
+    generatePKey(){
+        openssl ecparam -name $EC_ALGO -genkey -out $DOMAIN.key
+    }
 fi
 echo -e "${LCYAN}*** BEGIN OF ALGORITHM INFORMATION ***"
 echo "Authentication    : $SEL_ALGO"
@@ -121,7 +125,7 @@ echo ""
 # begin works
 echo -e "${WHITE}Generating ${CYAN}$SEL_ALGO ${WHITE}private key and certificate . . ."
 echo -e "${GREEN}"
-eval $PRIV_KEY_GEN
+generatePKey
 openssl req -new -key $DOMAIN.key -$SHA_ALGO -out $DOMAIN.csr < $SUBJ_INFO
 openssl x509 -req -in $DOMAIN.csr -passin file:$ROOT_CA_PATH/$PWD_FILE -signkey $DOMAIN.key -$SHA_ALGO -days $TTL -CA $ROOT_CA_PATH/$CA.crt -CAkey $ROOT_CA_PATH/$CA.key -CAcreateserial -out $DOMAIN.crt
 echo -e "\n${WHITE}Successfully generated ${CYAN}$SEL_ALGO ${WHITE}private key and certificate"
