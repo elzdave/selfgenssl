@@ -1,4 +1,4 @@
-# SSL/TLS Private Key and Certificate generator using OpenSSL
+# SSL/TLS Private Key and SAN Wildcard Certificate generator using OpenSSL
 
 ## General Information
 * Author    : David Eleazar [[elzdave@student.untan.ac.id](mailto:elzdave@student.untan.ac.id)]

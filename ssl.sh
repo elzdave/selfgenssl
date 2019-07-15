@@ -1,11 +1,11 @@
 #!/bin/bash
-# Generate trusted SSL certificate with speficied self-signed root CA using OpenSSL
+# Generate trusted SAN SSL certificate with speficied self-signed root CA using OpenSSL
 #
 # (c) 2019, David Eleazar
 #
-# Usage : ./ssl.sh [-algo]
+# Usage : ./ssl.sh [-algo] [domain]
 # Supported algo : rsa, ecdsa
-# If no argument specified, then the RSA algorithm will be used
+# If no argument specified, then the RSA algorithm and 'random.domain' will be used as algorithm and domain, respectively
 
 # Note : generate root CA first, and store generated root CA certificate to target OS/browser
 
@@ -45,6 +45,7 @@ else
 fi
 
 # Parameter, feel free to edit based on your needs
+OPENSSL_CFG=openssl.cnf # OpenSSL config file
 ROOT_CA_PATH=root_ssl   # set this to self-signed root CA path
 PWD_FILE=.passphrase    # set this to self-signed root CA private key passphrase file name
 CA=rootCA               # set this to self-signed root CA private key and certificate file name
@@ -53,6 +54,15 @@ EC_ALGO=secp384r1       # ECDSA algorithm
 SHA_ALGO=sha384         # Hashing algorithm
 TTL=1825                # this certificate will valid for ~5 years
 SUBJ_INFO=ssl.info      # our signed certificate information
+
+# make temporary OpenSSL config file
+cp $OPENSSL_CFG tmp_$OPENSSL_CFG
+
+# Subject Alternative Names (SAN)
+echo "[ alt_names ]" >> tmp_$OPENSSL_CFG
+echo "DNS.1 = $DOMAIN" >> tmp_$OPENSSL_CFG
+echo "DNS.2 = *.$DOMAIN" >> tmp_$OPENSSL_CFG
+echo "DNS.3 = *.*.$DOMAIN" >> tmp_$OPENSSL_CFG
 
 # splash lines
 clear
@@ -126,8 +136,9 @@ echo ""
 echo -e "${WHITE}Generating ${CYAN}$SEL_ALGO ${WHITE}private key and certificate . . ."
 echo -e "${GREEN}"
 generatePKey
-openssl req -new -key $DOMAIN.key -$SHA_ALGO -out $DOMAIN.csr < $SUBJ_INFO
-openssl x509 -req -in $DOMAIN.csr -passin file:$ROOT_CA_PATH/$PWD_FILE -signkey $DOMAIN.key -$SHA_ALGO -days $TTL -CA $ROOT_CA_PATH/$CA.crt -CAkey $ROOT_CA_PATH/$CA.key -CAcreateserial -out $DOMAIN.crt
+openssl req -new -key $DOMAIN.key -$SHA_ALGO -out $DOMAIN.csr -config tmp_$OPENSSL_CFG < $SUBJ_INFO
+openssl x509 -req -in $DOMAIN.csr -passin file:$ROOT_CA_PATH/$PWD_FILE -$SHA_ALGO -days $TTL -CA $ROOT_CA_PATH/$CA.crt -CAkey $ROOT_CA_PATH/$CA.key -CAcreateserial -out $DOMAIN.crt -extensions v3_req -extfile tmp_$OPENSSL_CFG
 echo -e "\n${WHITE}Successfully generated ${CYAN}$SEL_ALGO ${WHITE}private key and certificate"
 echo -e "${LCYAN}Certificate generation finished.${NC}"
+rm -rf tmp_$OPENSSL_CFG
 exit
