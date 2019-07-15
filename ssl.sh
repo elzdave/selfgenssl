@@ -62,7 +62,6 @@ cp $OPENSSL_CFG tmp_$OPENSSL_CFG
 echo "[ alt_names ]" >> tmp_$OPENSSL_CFG
 echo "DNS.1 = $DOMAIN" >> tmp_$OPENSSL_CFG
 echo "DNS.2 = *.$DOMAIN" >> tmp_$OPENSSL_CFG
-echo "DNS.3 = *.*.$DOMAIN" >> tmp_$OPENSSL_CFG
 
 # splash lines
 clear
